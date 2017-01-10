@@ -5,8 +5,16 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+var passport = require('./passport') //import passport file
+var session = require('express-session');// must import session module
+// must also get passport-local module as well as passport
+
+var flash = require('connect-flash'); // this is for flash messages with passport
+
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var signup = require('./routes/signup') //new route must be required
+var dashboard = require('./routes/dashboard')
 
 var app = express();
 
@@ -20,9 +28,34 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// session/cookie secret
+app.use(session({
+  secret: 'keyboard cat',
+  saveUninitialized: true,
+  resave: false
+}));
+
+app.use(passport.initialize()); // this starts passport
+app.use(passport.session()); // this starts serialize/deserialize
+app.use(flash()); // must initialize flash to use with passport
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
+
+app.use('/signup', signup); // signup route will handle logging in, take us to signup.js route
+
+app.use(function(req, res, next){
+  if(req.user){
+    next();
+  } else {
+    res.redirect('/signup')
+  }
+})
+app.use('/dashboard', dashboard); //initialize dashboard route
+
+
 app.use('/users', users);
 
 // catch 404 and forward to error handler

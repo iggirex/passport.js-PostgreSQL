@@ -1,20 +1,26 @@
 var express = require('express');
 var router = express.Router();
 var queries = require('../db/queries');
+var passport = require('../passport');
 
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  queries.getAllUsers().then((data)=>{
-    res.json(data);
-  })
-  // res.render("index")
+  res.render('index');
+  // if(!req.user) {
+  //   next();
+  // } else {
+  //   res.render('dashboard');
+  // }
 });
-router.post('/', function(req, res, next){
-  queries.insertUser(req.body.fName, req.body.lName, req.body.username, req.body.password)
-  .then(function(){
-    res.redirect('/')
-  })
-})
+// router.get('/', function(req, res, next){
+//   res.send('login failure');
+// })
+router.post('/', passport.authenticate('local', {
+  successRedirect: '/dashboard',
+  failureRedirect: '/open',
+  failureFlash: "Incorrect username or password",
+  successFlash: "Welcome!"
+}));
 
 module.exports = router;
